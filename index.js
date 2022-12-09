@@ -1,9 +1,9 @@
 import { FifoQueue } from './fifo.js';
 
-const fifo = new FifoQueue('mojakolejka');
+const fifo = new FifoQueue('Mark');
 await fifo.init();
 // const newElement = fifo.createQueueElement();
 
-// fifo.push_head();
+await fifo.push_head('Siemano');
 console.log(await fifo.getElements());
 await fifo.remove(); //clearing fifo for dev purposes

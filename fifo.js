@@ -1,8 +1,8 @@
 export class FifoQueue {
     constructor(queueName) {
         this.queueName = queueName;
-        this.head = {};
-        this.tail = {};
+        this.head = null;
+        this.tail = null;
     }
 
     async init() {
@@ -30,7 +30,7 @@ export class FifoQueue {
         if (response != null) {
             return response;
         } else {
-            return {};
+            return null;
         }
     }
 
@@ -50,16 +50,29 @@ export class FifoQueue {
             `${this.queueName}Element-${id}`,
         );
 
-        if (this.tail === {}) {
-            await this.setKeyInStorage('Tail', this.queueName + id);
+        if (this.tail === null) {
+            await this.setKeyInStorage(
+                'Tail',
+                `${this.queueName}Element-${id}`,
+            );
             await this.setHeadAndTail();
         }
 
-        await this.setKeyInStorage('Head', this.queueName + id);
+        await this.setKeyInStorage('Head', `${this.queueName}Element-${id}`);
     }
 
     async getElements() {
-        return await localforage.getItem(this.queueName);
+        const head = await localforage.getItem(this.queueName + 'Head');
+        const tail = await localforage.getItem(this.queueName + 'Tail');
+        const lastIndex = await localforage.getItem(
+            this.queueName + 'LastIndex',
+        );
+
+        return {
+            head,
+            tail,
+            lastIndex,
+        };
     }
 
     async generateId() {
@@ -75,7 +88,7 @@ export class FifoQueue {
         }
     }
 
-    async setNewLastIndex(lastIndex = 1) {
+    async setNewLastIndex(lastIndex = 0) {
         await localforage.setItem(this.queueName + 'LastIndex', lastIndex + 1);
     }
 
