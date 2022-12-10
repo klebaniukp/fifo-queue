@@ -15,20 +15,19 @@ export class FifoQueue {
     }
 
     async setQueue() {
-        if (!(await this.isQueueAlreadyCreated())) {
+        if (!(await this.isKeyCreated(this.queueName))) {
             await localforage.setItem(this.queueName, 'Initialized');
         }
         this.isInitialized = true;
         await this.setHeadAndTail();
     }
 
-    async isQueueAlreadyCreated() {
-        return (await localforage.getItem(this.queueName)) != null;
+    async isKeyCreated(key) {
+        return (await localforage.getItem(key)) != null;
     }
 
     async setHeadAndTail() {
         this.headPointer = await this.getValueFromStorage('Head');
-        console.log(this.headPointer);
         this.tailPointer = await this.getValueFromStorage('Tail');
     }
 
@@ -51,6 +50,10 @@ export class FifoQueue {
         const fullKey = this.queueName + keyElement;
 
         await localforage.setItem(fullKey, value);
+    }
+
+    async setPrevFieldForCurrentHead(value = '') {
+        await localforage.setItem(`${this.headPointer}-Prev`, value);
     }
 
     async getValueFromStorage(keyElement = '') {
@@ -76,23 +79,41 @@ export class FifoQueue {
             await this.setKeyInStorage(`Element-${id}-Prev`, '');
             await this.setKeyInStorage(`Element-${id}-Value`, value);
 
-            await this.setKeyInStorage(
-                `Element-${this.headPointer}-Prev`,
-                `${this.queueName}Element-${id}`,
-            );
-
-            console.log('Head pointer', this.headPointer);
             console.log('Id', id);
             console.log(
-                'Next',
-                this.headPointer === null ? '' : this.headPointer,
+                'Current head prev',
+                await localforage.getItem(
+                    `${this.queueName}Element-${this.headPointer}-Prev`,
+                ),
+                `id: ${this.headPointer}`,
             );
-            console.log('Prev', ``);
+
+            if (this.headPointer != null) {
+                // console.log('Head Pointer', `${this.headPointer}-Prev`);
+                // console.log("I'm here", `${this.queueName}Element-${id}`);
+                await this.setPrevFieldForCurrentHead(
+                    `${this.queueName}Element-${id}`,
+                );
+            }
 
             console.log(
-                'Prev for another element',
-                `${this.queueName}Element-${id}`,
+                'Current head updated prev',
+                await localforage.getItem(
+                    `${this.queueName}Element-${this.headPointer}-Prev`,
+                ),
+                `id: ${this.headPointer}`,
             );
+            console.log('Head pointer', this.headPointer);
+            // console.log(
+            //     'Next',
+            //     this.headPointer === null ? '' : this.headPointer,
+            // );
+            // console.log('Prev', ``);
+            //
+            // console.log(
+            //     'Prev for another element',
+            //     `${this.queueName}Element-${id}`,
+            // );
 
             if (this.tailPointer === null) {
                 await this.setKeyInStorage(
@@ -101,18 +122,11 @@ export class FifoQueue {
                 );
             }
 
-            if (this.headPointer === null) {
-                await this.setKeyInStorage(
-                    'Head',
-                    `${this.queueName}Element-${id}`,
-                );
-            }
-
-            await this.setHeadAndTail();
             await this.setKeyInStorage(
                 'Head',
                 `${this.queueName}Element-${id}`,
             );
+            await this.setHeadAndTail();
         } catch (error) {
             console.error(error);
         }
@@ -134,6 +148,21 @@ export class FifoQueue {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    async getAllValuesForElement(id) {
+        // prev, next, val
+        const prev = await this.getValueFromStorage(`Element-${id}-Prev`);
+        const next = await this.getValueFromStorage(`Element-${id}-Next`);
+        const value = await this.getValueFromStorage(`Element-${id}-Value`);
+        console.log('prev', `Element-${id}-Prev`);
+        return {
+            id,
+            keyName: `${this.queueName}Element-${id}`,
+            prev,
+            next,
+            value,
+        };
     }
 
     async getElements() {
