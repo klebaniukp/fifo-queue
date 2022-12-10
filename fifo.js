@@ -1,8 +1,8 @@
 export class FifoQueue {
     constructor(queueName) {
         this.queueName = queueName;
-        this.head = null;
-        this.tail = null;
+        this.headPointer = null;
+        this.tailPointer = null;
         this.isInitialized = false;
         this.numberOfInitializeChecks = 0;
         this.init();
@@ -27,9 +27,9 @@ export class FifoQueue {
     }
 
     async setHeadAndTail() {
-        this.head = await this.getValueFromStorage('Head');
-        console.log(this.head);
-        this.tail = await this.getValueFromStorage('Tail');
+        this.headPointer = await this.getValueFromStorage('Head');
+        console.log(this.headPointer);
+        this.tailPointer = await this.getValueFromStorage('Tail');
     }
 
     checkInitializeState() {
@@ -71,18 +71,22 @@ export class FifoQueue {
 
             await this.setKeyInStorage(
                 `Element-${id}-Next`,
-                this.head === null ? '' : this.head,
+                this.headPointer === null ? '' : this.headPointer,
             );
             await this.setKeyInStorage(`Element-${id}-Prev`, '');
             await this.setKeyInStorage(`Element-${id}-Value`, value);
 
             await this.setKeyInStorage(
-                `Element-${this.head}-Prev`,
+                `Element-${this.headPointer}-Prev`,
                 `${this.queueName}Element-${id}`,
             );
 
+            console.log('Head pointer', this.headPointer);
             console.log('Id', id);
-            console.log('Next', this.head === null ? '' : this.head);
+            console.log(
+                'Next',
+                this.headPointer === null ? '' : this.headPointer,
+            );
             console.log('Prev', ``);
 
             console.log(
@@ -90,9 +94,16 @@ export class FifoQueue {
                 `${this.queueName}Element-${id}`,
             );
 
-            if (this.tail === null) {
+            if (this.tailPointer === null) {
                 await this.setKeyInStorage(
                     'Tail',
+                    `${this.queueName}Element-${id}`,
+                );
+            }
+
+            if (this.headPointer === null) {
+                await this.setKeyInStorage(
+                    'Head',
                     `${this.queueName}Element-${id}`,
                 );
             }
@@ -102,6 +113,24 @@ export class FifoQueue {
                 'Head',
                 `${this.queueName}Element-${id}`,
             );
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async tail() {
+        try {
+            this.checkInitializeState();
+            return await localforage.getItem(this.queueName + 'Tail');
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async head() {
+        try {
+            this.checkInitializeState();
+            return await localforage.getItem(this.queueName + 'Head');
         } catch (error) {
             console.error(error);
         }

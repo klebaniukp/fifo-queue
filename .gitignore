@@ -96,3 +96,6 @@ fabric.properties
 
 localforage/
 localforage/*
+
+localForage-startsWith/
+localForage-startsWith/*
