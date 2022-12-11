@@ -1,9 +1,15 @@
 export class FifoQueue {
     constructor(queueName) {
+        // Name for queue
         this.queueName = queueName;
+
+        // keys for head and tail
         this.headPointer = null;
         this.tailPointer = null;
+
+        // field for checking if queue is initialized bcs constructor had to use asynchronous method
         this.isInitialized = false;
+
         this.numberOfInitializeChecks = 0;
         this.init();
     }
@@ -15,15 +21,8 @@ export class FifoQueue {
     }
 
     async setQueue() {
-        if (!(await this.isKeyCreated(this.queueName))) {
-            await localforage.setItem(this.queueName, 'Initialized');
-        }
-        this.isInitialized = true;
         await this.setHeadAndTail();
-    }
-
-    async isKeyCreated(key) {
-        return (await localforage.getItem(key)) != null;
+        this.isInitialized = true;
     }
 
     async setHeadAndTail() {
@@ -52,10 +51,6 @@ export class FifoQueue {
         await localforage.setItem(fullKey, value);
     }
 
-    async setPrevFieldForCurrentHead(value = '') {
-        await localforage.setItem(`${this.headPointer}-Prev`, value);
-    }
-
     async getValueFromStorage(keyElement = '') {
         const fullKey = this.queueName + keyElement;
         const response = await localforage.getItem(fullKey);
@@ -78,42 +73,6 @@ export class FifoQueue {
             );
             await this.setKeyInStorage(`Element-${id}-Prev`, '');
             await this.setKeyInStorage(`Element-${id}-Value`, value);
-
-            console.log('Id', id);
-            console.log(
-                'Current head prev',
-                await localforage.getItem(
-                    `${this.queueName}Element-${this.headPointer}-Prev`,
-                ),
-                `id: ${this.headPointer}`,
-            );
-
-            if (this.headPointer != null) {
-                // console.log('Head Pointer', `${this.headPointer}-Prev`);
-                // console.log("I'm here", `${this.queueName}Element-${id}`);
-                await this.setPrevFieldForCurrentHead(
-                    `${this.queueName}Element-${id}`,
-                );
-            }
-
-            console.log(
-                'Current head updated prev',
-                await localforage.getItem(
-                    `${this.queueName}Element-${this.headPointer}-Prev`,
-                ),
-                `id: ${this.headPointer}`,
-            );
-            console.log('Head pointer', this.headPointer);
-            // console.log(
-            //     'Next',
-            //     this.headPointer === null ? '' : this.headPointer,
-            // );
-            // console.log('Prev', ``);
-            //
-            // console.log(
-            //     'Prev for another element',
-            //     `${this.queueName}Element-${id}`,
-            // );
 
             if (this.tailPointer === null) {
                 await this.setKeyInStorage(
@@ -190,43 +149,6 @@ export class FifoQueue {
         };
     }
 
-    async getElements() {
-        try {
-            this.checkInitializeState();
-            const head = await localforage.getItem(this.queueName + 'Head');
-            const tail = await localforage.getItem(this.queueName + 'Tail');
-            const lastIndex = await localforage.getItem(
-                this.queueName + 'LastIndex',
-            );
-            await this.listAllElements(head);
-
-            return {
-                head,
-                tail,
-                lastIndex,
-            };
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
-    // listing all elements head - tail
-    async listAllElements(identifier = `${this.queueName}Element-1`) {
-        try {
-            this.checkInitializeState();
-            const item = await localforage.getItem(`${identifier}-Value`);
-            const nextItemId = await localforage.getItem(`${identifier}-Next`);
-            console.log(nextItemId);
-            console.log(`Id: ${identifier}, Value: ${item}`);
-            if (nextItemId === '') {
-                return 0;
-            }
-            await this.listAllElements(nextItemId);
-        } catch (error) {
-            console.error(error);
-        }
-    }
-
     async generateId() {
         const lastIndexKeyName = this.queueName + 'LastIndex';
 
@@ -244,17 +166,7 @@ export class FifoQueue {
         await localforage.setItem(this.queueName + 'LastIndex', lastIndex + 1);
     }
 
-    async remove() {
-        await localforage.removeItem(this.queueName);
-    }
-
     async clear() {
         await localforage.clear();
     }
 }
-// element:
-// {
-// "Name-x-value='some value'"
-// "Name-x-next='id of next node'" //node id if exists
-// "Name-x-prev='id of previous node'" //node id if exists
-// }
