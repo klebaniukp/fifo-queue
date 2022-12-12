@@ -10,7 +10,7 @@ export class FifoQueue {
         // field for checking if queue is initialized bcs constructor had to use asynchronous method
         this.isInitialized = false;
 
-        this.elementSufix = 'Element';
+        this.ELEMENT_SUFIX = 'Element';
         this.numberOfInitializeChecks = 0;
         this.init();
     }
@@ -74,31 +74,31 @@ export class FifoQueue {
             const id = await this.generateId();
 
             await this.setKeyInStorage(
-                `${this.elementSufix}-${id}-Next`,
+                `${this.ELEMENT_SUFIX}-${id}-Next`,
                 this.headPointer === null ? '' : this.headPointer,
             );
-            await this.setKeyInStorage(`${this.elementSufix}-${id}-Prev`, '');
+            await this.setKeyInStorage(`${this.ELEMENT_SUFIX}-${id}-Prev`, '');
             await this.setKeyInStorage(
-                `${this.elementSufix}-${id}-Value`,
+                `${this.ELEMENT_SUFIX}-${id}-Value`,
                 value,
             );
 
             if (this.tailPointer === null) {
                 await this.setKeyInStorage(
                     'Tail',
-                    `${this.queueName}${this.elementSufix}-${id}`,
+                    `${this.queueName}${this.ELEMENT_SUFIX}-${id}`,
                 );
             }
 
             if (this.headPointer != null) {
                 await this.setPrevFieldForCurrentHead(
-                    `${this.queueName}${this.elementSufix}-${id}`,
+                    `${this.queueName}${this.ELEMENT_SUFIX}-${id}`,
                 );
             }
 
             await this.setKeyInStorage(
                 'Head',
-                `${this.queueName}${this.elementSufix}-${id}`,
+                `${this.queueName}${this.ELEMENT_SUFIX}-${id}`,
             );
             await this.setHeadAndTail();
         } catch (error) {
@@ -158,13 +158,13 @@ export class FifoQueue {
 
     async getAllValuesForElement(id) {
         const prev = await this.getValueFromStorage(
-            `${this.elementSufix}-${id}-Prev`,
+            `${this.ELEMENT_SUFIX}-${id}-Prev`,
         );
         const next = await this.getValueFromStorage(
-            `${this.elementSufix}-${id}-Next`,
+            `${this.ELEMENT_SUFIX}-${id}-Next`,
         );
         const value = await this.getValueFromStorage(
-            `${this.elementSufix}-${id}-Value`,
+            `${this.ELEMENT_SUFIX}-${id}-Value`,
         );
 
         return {
