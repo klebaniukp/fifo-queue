@@ -8,8 +8,41 @@
     <title>FiFo Queue</title>
 </head>
 <body>
+    <div class='test-wrapper'>
+        <label for='elementid'>enter id you want to check</label>
+        <input id='elementid' type='text' value='0'>
+        <button id='get-element'>Get element</button>
+        <p id='get-element-output'>Output: </p>
+    </div>
+
+    <div class='test-wrapper'>
+        <label for='element-value'>enter value for the element</label>
+        <input id='element-value' type='text' value='Hello world'>
+        <button id='push_head'>push_head</button>
+    </div>
+
+    <div class='test-wrapper'>
+        <button id='pop_tail'>pop_tail</button>
+        <p id='pop_tail-output'>Output: </p>
+    </div>
+
+    <div class='test-wrapper'>
+        <button id='tail'>tail</button>
+        <p id='tail-output'>Output: </p>
+    </div>
+
+    <div class='test-wrapper'>
+        <button id='head'>head</button>
+        <p id='head-output'>Output: </p>
+    </div>
+
+    <div class='test-wrapper'>
+        <button id='clear'>clear</button>
+    </div>
+
     <script src="localforage/dist/localforage.js"></script>
 <!--    <script src='localForage-startsWith/dist/localforage-startswith.es6.js'></script>-->
     <script type='module' src="./index.js"></script>
+
 </body>
 </html>

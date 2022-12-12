@@ -83,7 +83,7 @@ export class FifoQueue {
                 value,
             );
 
-            if (this.tailPointer === null) {
+            if (this.tailPointer === null || this.tailPointer === '') {
                 await this.setKeyInStorage(
                     'Tail',
                     `${this.queueName}${this.ELEMENT_SUFIX}-${id}`,
@@ -109,12 +109,16 @@ export class FifoQueue {
     async pop_tail() {
         try {
             this.checkInitializeState();
-
             const tailElement = await this.getValueFromStorage('Tail');
+
+            if (tailElement === '' || tailElement === null) {
+                await this.setHeadAndTail();
+                return null;
+            }
+
             const tailElementPrev = await localforage.getItem(
                 `${tailElement}-Prev`,
             );
-
             await localforage.setItem(`${tailElementPrev}-Next`, '');
 
             if (this.headPointer === this.tailPointer) {
@@ -125,6 +129,7 @@ export class FifoQueue {
             await this.removeElement(tailElement);
             await this.setKeyInStorage('Tail', tailElementPrev);
             await this.setHeadAndTail();
+            await this.reduceLastIndex();
 
             return tailElement;
         } catch (error) {
@@ -193,7 +198,16 @@ export class FifoQueue {
         await localforage.setItem(this.queueName + 'LastIndex', lastIndex + 1);
     }
 
+    async reduceLastIndex() {
+        const lastIndexKeyName = this.queueName + 'LastIndex';
+        await localforage.setItem(
+            lastIndexKeyName,
+            (await localforage.getItem(lastIndexKeyName)) - 1,
+        );
+    }
+
     async clear() {
         await localforage.clear();
+        await this.setHeadAndTail();
     }
 }
