@@ -10,6 +10,7 @@ export class FifoQueue {
         // field for checking if queue is initialized bcs constructor had to use asynchronous method
         this.isInitialized = false;
 
+        this.elementSufix = 'Element';
         this.numberOfInitializeChecks = 0;
         this.init();
     }
@@ -51,6 +52,11 @@ export class FifoQueue {
         await localforage.setItem(fullKey, value);
     }
 
+    async setPrevFieldForCurrentHead(value = '') {
+        // console.log(`${this.headPointer}-Prev`);
+        await localforage.setItem(`${this.headPointer}-Prev`, value);
+    }
+
     async getValueFromStorage(keyElement = '') {
         const fullKey = this.queueName + keyElement;
         const response = await localforage.getItem(fullKey);
@@ -68,22 +74,31 @@ export class FifoQueue {
             const id = await this.generateId();
 
             await this.setKeyInStorage(
-                `Element-${id}-Next`,
+                `${this.elementSufix}-${id}-Next`,
                 this.headPointer === null ? '' : this.headPointer,
             );
-            await this.setKeyInStorage(`Element-${id}-Prev`, '');
-            await this.setKeyInStorage(`Element-${id}-Value`, value);
+            await this.setKeyInStorage(`${this.elementSufix}-${id}-Prev`, '');
+            await this.setKeyInStorage(
+                `${this.elementSufix}-${id}-Value`,
+                value,
+            );
 
             if (this.tailPointer === null) {
                 await this.setKeyInStorage(
                     'Tail',
-                    `${this.queueName}Element-${id}`,
+                    `${this.queueName}${this.elementSufix}-${id}`,
+                );
+            }
+
+            if (this.headPointer != null) {
+                await this.setPrevFieldForCurrentHead(
+                    `${this.queueName}${this.elementSufix}-${id}`,
                 );
             }
 
             await this.setKeyInStorage(
                 'Head',
-                `${this.queueName}Element-${id}`,
+                `${this.queueName}${this.elementSufix}-${id}`,
             );
             await this.setHeadAndTail();
         } catch (error) {
@@ -107,7 +122,7 @@ export class FifoQueue {
                 await localforage.removeItem(`${this.queueName}Tail`);
             }
 
-            await localforage.removeItem(tailElement);
+            await this.removeElement(tailElement);
             await this.setKeyInStorage('Tail', tailElementPrev);
             await this.setHeadAndTail();
 
@@ -115,6 +130,12 @@ export class FifoQueue {
         } catch (error) {
             console.error(error);
         }
+    }
+
+    async removeElement(elementBase = '') {
+        await localforage.removeItem(`${elementBase}-Prev`);
+        await localforage.removeItem(`${elementBase}-Next`);
+        await localforage.removeItem(`${elementBase}-Value`);
     }
 
     async head() {
@@ -136,9 +157,15 @@ export class FifoQueue {
     }
 
     async getAllValuesForElement(id) {
-        const prev = await this.getValueFromStorage(`Element-${id}-Prev`);
-        const next = await this.getValueFromStorage(`Element-${id}-Next`);
-        const value = await this.getValueFromStorage(`Element-${id}-Value`);
+        const prev = await this.getValueFromStorage(
+            `${this.elementSufix}-${id}-Prev`,
+        );
+        const next = await this.getValueFromStorage(
+            `${this.elementSufix}-${id}-Next`,
+        );
+        const value = await this.getValueFromStorage(
+            `${this.elementSufix}-${id}-Value`,
+        );
 
         return {
             id,
