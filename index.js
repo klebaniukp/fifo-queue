@@ -2,10 +2,6 @@ import { FifoQueue } from './fifo.js';
 
 const queue = new FifoQueue('Mark');
 
-// await queue.push_head('1 element');
-// await queue.push_head('2 element');
-// await queue.push_head('3 element');
-// await queue.push_head('4 element');
 const idInput = document.querySelector('#elementid');
 let id = 0;
 
